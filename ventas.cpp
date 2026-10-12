@@ -28,6 +28,13 @@ struct ComandaHistorica {
     float comision;
 };
 
+void encriptarContrasenia(const char origen[], char destino[]) {
+    int i = 0;
+    while (origen[i] != '\0') {
+        origen[i] + K = destino[i] ;
+    }
+    destino[i] = '\0';
+}
 
 int main (){
 	int dia, mes, anio;
