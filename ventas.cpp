@@ -52,6 +52,22 @@ void cargarMozos(Mozo mozos[], int &cantidadMozos) {
     fclose(f);
 }
 
+void cargarInventario(Producto inventario[], int &cantidadProductos) {
+    FILE *f = fopen("inventario.dat", "rb");
+    cantidadProductos = 0;
+
+    if (f == NULL) {
+        cout << "No existe inventario.dat. Debe generarse antes de registrar ventas." << endl;
+        return;
+    }
+
+    Producto aux;
+    while (fread(&aux, sizeof(Producto), 1, f) == 1 && cantidadProductos < 100) {
+        inventario[cantidadProductos++] = aux;
+    }
+    fclose(f);
+}
+
 bool esFechaValida(int dia, int mes, int anio) {
    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
         return false;
@@ -96,6 +112,15 @@ int main (){
 
 	if (cantidadMozos == 0) {
         cout << "No hay mozos cargados. Primero debe generarse mozos.dat." << endl;
+        return 0;
+    }
+
+	Producto inventario[100];
+    int cantidadProductos = 0;
+    cargarInventario(inventario, cantidadProductos);
+
+	 if (cantidadProductos == 0) {
+        cout << "No hay productos cargados. Primero debe generarse inventario.dat." << endl;
         return 0;
     }
 	
