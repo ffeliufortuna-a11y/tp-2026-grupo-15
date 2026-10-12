@@ -68,6 +68,20 @@ void cargarInventario(Producto inventario[], int &cantidadProductos) {
     fclose(f);
 }
 
+bool loginMozo(Mozo mozos[], int cantidadMozos, int idIngresado, const char passIngresada[], Mozo &mozoLogueado) {
+    char passEncriptada[20];
+    encriptarContrasenia(passIngresada, passEncriptada);
+
+    for (int i = 0; i < cantidadMozos; i++) {
+        if (mozos[i].idMozo == idIngresado && strcmp(mozos[i].password, passEncriptada) == 0) {
+            mozoLogueado = mozos[i];
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool esFechaValida(int dia, int mes, int anio) {
    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
         return false;
@@ -123,6 +137,22 @@ int main (){
         cout << "No hay productos cargados. Primero debe generarse inventario.dat." << endl;
         return 0;
     }
+
+	int idMozo;
+    char pass[20];
+
+    cout << "Ingrese el ID del mozo: ";
+    cin >> idMozo;
+    cout << "Ingrese la password: ";
+    cin >> pass;
+
+    Mozo mozoActual;
+    if (loginMozo(mozos, cantidadMozos, idMozo, pass, mozoActual) == false) {
+        cout << "Credenciales invalidas." << endl;
+        return 0;
+    }
+
+
 	
 	return 0;
 }
