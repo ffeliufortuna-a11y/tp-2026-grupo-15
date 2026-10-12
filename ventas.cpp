@@ -35,6 +35,26 @@ void encriptarContrasenia(const char origen[], char destino[]) {
         i++;
     }
     destino[i] = '\0';
+}
+
+bool esFechaValida(int dia, int mes, int anio) {
+   if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
+        return false;
+    }
+
+    int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    bool anioBisiesto = anio % 4 == 0 && (anio % 100 != 0 || anio % 400 == 0);
+
+    if (anioBisiesto == true && mes == 2) {
+        diasPorMes[1] = 29;
+    }
+
+    if (dia > diasPorMes[mes - 1]) {
+        return false;
+    }
+	
+    return true;
+}
 
 int main (){
 	int dia, mes, anio;
@@ -48,8 +68,8 @@ int main (){
 	 cout << "Anio: ";
 	 cin >> anio;
 	
-    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1900) {
-        cout << "Fecha invalida." << endl;
+     if (esFechaValida(dia, mes, anio) == false) {
+        cout << "Fecha invalida. Verifique que el dia exista para ese mes y anio." << endl;
         return 0;
     }
 
