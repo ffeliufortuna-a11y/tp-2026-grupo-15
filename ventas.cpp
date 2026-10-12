@@ -152,6 +152,21 @@ int main (){
         return 0;
     }
 
+cout << "Bienvenido/a: " << mozoActual.nombre << endl;
+
+    int continuar = 1;
+    float totalVentaDelMozo = 0.0f;
+
+    while (continuar) {
+        int codigoProducto;
+        int cantidadVendida;
+
+        cout << "\nIngrese codigo del producto (0 para finalizar): ";
+        cin >> codigoProducto;
+
+        if (codigoProducto == 0) {
+            break;
+        }
 
 	
 	return 0;
