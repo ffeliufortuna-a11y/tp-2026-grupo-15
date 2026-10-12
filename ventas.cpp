@@ -82,6 +82,15 @@ bool loginMozo(Mozo mozos[], int cantidadMozos, int idIngresado, const char pass
     return false;
 }
 
+Producto *buscarProducto(Producto inventario[], int cantidadProductos, int codigo) {
+    for (int i = 0; i < cantidadProductos; i++) {
+        if (inventario[i].codigo == codigo) {
+            return &inventario[i];
+        }
+    }
+    return NULL;
+}
+
 bool esFechaValida(int dia, int mes, int anio) {
    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
         return false;
