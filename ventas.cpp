@@ -4,18 +4,28 @@
 
 using namespace std;
 
-struct Mozo { //de mozos.dat
-    int idMozo; 
+const int K = 5;
+
+struct Mozo {
+    int idMozo;
     char nombre[50];
     char password[20];
-    float totalComision; 
+    float totalComision;
 };
 
-struct Producto {//de inventario.dat 
-int codigo;
-char descripcion[50]; 
-float precio; 
-int stockActual;
+struct Producto {
+    int codigo;
+    char descripcion[50];
+    float precio;
+    int stockActual;
+};
+
+struct ComandaHistorica {
+    char fecha[11];
+    char nombreMozo[50];
+    int codigoProducto;
+    int cantidad;
+    float comision;
 };
 
 
