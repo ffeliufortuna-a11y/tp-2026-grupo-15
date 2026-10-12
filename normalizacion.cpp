@@ -12,11 +12,10 @@ struct ComandaHistorica {
 struct Mozo { 
     int idMozo; 
     char nombre[50];
-    char password[20]; // agregamos este campo para almacenar la clave encriptada, exigido por el TP para el login seguro
+    char password[20]; 
     float totalComision; 
 };
 
-//  Creamos esta estructura para las planillas diarias porque el TP requiere que guarden el idMozo numérico en vez del nombre largo
 struct Comanda { 
     int idMozo;       //  Guarda el identificador numérico del mozo
     int codigoProducto; //  Guarda el código del producto vendido
@@ -24,33 +23,40 @@ struct Comanda {
     float comision;   // Guarda la comisión correspondiente a la venta
 };
 
-//  Creamos esta estructura para manejar el inventario y poder actualizar el stock
 struct Producto {
     int codigo;         //  Código único del producto
     char descripcion[50]; // Descripción del producto.
     float precio;       // Precio unitario del product.
     int stockActual;    // Stock disponible que iremos descontando
 };
+// Declaramos una variable global k fuera del main para usarla como corrimiento fijo en claves
+int k = 5;
 
-// Declaramos una variable global K fuera del main para usarla como corrimiento fijo en claves
-int K = 5;
-
-// Creamos esta función para cifrar la contraseña inicial sumándole el valor K a cada carácter.
+// Creamos esta funcion para establecer la contrasenia inicial sumandole el valor k a cada caracter.
 void encriptarPassword(char origen[], char destino[]) {
-    int i = 0;                                       // Inicializamos el índice para recorrer el texto carácter por carácter.
-    while (origen[i] != '\0') {                      //  Bucle que recorre la cadena hasta encontrar el carácter nulo de fin.
-        destino[i] = origen[i] + K;                  //  Al carácter actual le sumamos K para encriptarlo
-        i++;                                         //  Avanzamos a la siguiente posición del texto.
+    int i = 0;                                       // Inicializamos el indice para recorrer el texto caracter por caracter.
+    while (origen[i] != '\0') {                      //  Bucle que recorre la cadena hasta encontrar el caracter nulo de fin.
+        destino[i] = origen[i] + k;                  //  Al caracter actual le sumamos k para encriptarlo
+        i++;                                         //  Avanzamos a la siguiente posicion del texto.
     }
     destino[i] = '\0';                               //  Colocamos el fin de cadena al final del texto ya encriptado.
 }
 
-// Creamos esta función para actualizar el stock directamente en el vec
-void actualizarStockEnMemoria(Producto inv[], int cantProd, int codProd, int cantVendida) {
-    for (int i = 0; i < cantProd; i++) {             //  Recorremos todo el vec de productos en memoria principal.
-        if (inv[i].codigo == codProd) {              //  Buscamos el producto cuyo código coincida con el vendido.
-            inv[i].stockActual -= cantVendida;       //  Restamos la cantidad vendida al stock actual.
-            break;                                   //  Salimos del bucle porque ya encontramos y actualizamos el producto.
+// Creamos esta funcion para actualizar el stock directamente en el archivo
+void actualizarStock(FILE* inventario, int codProd, int cantVendida) {
+    Producto p;
+    
+    fseek(inventario, 0, SEEK_SET); // SEEK_SET mueve el cursor al principio del archivo para buscar el producto desde el primer registro.
+      
+    // Leemos registro por registro
+    while (fread(&p, sizeof(Producto), 1, inventario) == 1) {
+        if (p.codigo == codProd) {
+            p.stockActual -= cantVendida;  // Actualizamos la variable en memoria
+           
+           fseek(finv, -sizeof(Producto), SEEK_CUR); // Retrocedemos el cursor el tamanio exacto de un Producto.            
+           fwrite(&p, sizeof(Producto), 1, finv); // Sobrescribimos el registro actualizado en esa misma posicion
+           
+            break; //Ya quedo actualizado
         }
     }
 }
