@@ -38,7 +38,7 @@ void encriptarContrasenia(const char origen[], char destino[]) {
 
 int main (){
 	int dia, mes, anio;
-
+    char fecha[11];
 	 
 	 cout <<"Ingrese la fecha."<<endl;
 	 cout <<"Dia: ";
@@ -47,6 +47,17 @@ int main (){
 	 cin >> mes;
 	 cout << "Anio: ";
 	 cin >> anio;
+	
+    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1900) {
+        cout << "Fecha invalida." << endl;
+        return 0;
+    }
 
+    sprintf(fecha, "%02d-%02d-%04d", dia, mes, anio);
+
+	Mozo mozos[50];
+    int cantidadMozos = 0;
+   
+	
 	return 0;
 }
