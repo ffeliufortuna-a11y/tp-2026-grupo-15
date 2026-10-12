@@ -37,6 +37,21 @@ void encriptarContrasenia(const char origen[], char destino[]) {
     destino[i] = '\0';
 }
 
+void cargarMozos(Mozo mozos[], int &cantidadMozos) {
+    FILE *f = fopen("mozos.dat", "rb");
+    cantidadMozos = 0;
+
+    if (f == NULL) {
+        cout << "No existe mozos.dat. Es necesario generar mozos.dat antes de cargar ventas." << endl;
+        return;
+    }
+  Mozo aux;
+    while (fread(&aux, sizeof(Mozo), 1, f) == 1 && cantidadMozos < 50) {
+        mozos[cantidadMozos++] = aux;
+    }
+    fclose(f);
+}
+
 bool esFechaValida(int dia, int mes, int anio) {
    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
         return false;
@@ -77,7 +92,12 @@ int main (){
 
 	Mozo mozos[50];
     int cantidadMozos = 0;
-   
+	cargarMozos(mozos, cantidadMozos);
+
+	if (cantidadMozos == 0) {
+        cout << "No hay mozos cargados. Primero debe generarse mozos.dat." << endl;
+        return 0;
+    }
 	
 	return 0;
 }
