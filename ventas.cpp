@@ -236,7 +236,20 @@ float subtotal = producto->precio * cantidadVendida;
             cout << "No se pudo abrir comandas_historicas.dat." << endl;
             return 0;
         }
+		
+fwrite(&registro, sizeof(ComandaHistorica), 1, fHistorico);
+        fclose(fHistorico);
 
+        producto->stockActual -= cantidadVendida;
+        totalVentaDelMozo += subtotal;
+
+        for (int i = 0; i < cantidadMozos; i++) {
+            if (mozos[i].idMozo == mozoActual.idMozo) {
+                mozos[i].totalComision += comision;
+                mozoActual.totalComision = mozos[i].totalComision;
+                break;
+            }
+        }
 	
 	return 0;
 }
