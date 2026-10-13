@@ -188,6 +188,26 @@ cout << "Bienvenido/a: " << mozoActual.nombre << endl;
             break;
         }
 
+
+		
+
+		cout << "Descripcion: " << producto->descripcion << endl;
+        cout << "Precio unitario: $" << producto->precio << endl;
+        cout << "Stock actual: " << producto->stockActual << endl;
+        cout << "Cantidad a vender: ";
+        cin >> cantidadVendida;
+
+        if (cantidadVendida <= 0) {
+            cout << "La cantidad debe ser mayor a cero." << endl;
+            continue;
+        }
+
+        if (cantidadVendida > producto->stockActual) {
+            cout << "No hay stock suficiente para esa venta." << endl;
+            continue;
+        }
+
+
 	
 	return 0;
 }
