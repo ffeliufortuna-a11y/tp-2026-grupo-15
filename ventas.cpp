@@ -198,79 +198,122 @@ int main (){
 
 cout << "Bienvenido/a: " << mozoActual.nombre << endl; //si se verifico los datos da la bienvenida
 
-    int continuar = 1;
-    float totalVentaDelMozo = 0.0f;
+    int continuar = true;
+    float totalVentaDelMozo = 0.0f; //contador de ventas
 
     while (continuar) {
-        int codigoProducto;
-        int cantidadVendida;
+        int opcion;
+        cout << "\n--- Menu de ventas ---" << endl;
+        cout << "1. Registrar venta" << endl;
+        cout << "2. Cambiar de mozo" << endl;
+        cout << "0. Finalizar" << endl;
+        cout << "Opcion: ";
+        cin >> opcion;
 
-        cout << "\nIngrese codigo del producto (0 para finalizar): ";
-        cin >> codigoProducto;
+        switch (opcion) {
+            case 1: {
+                while (true) {
+                    int codigoProducto;
+                    int cantidadVendida;
 
-        if (codigoProducto == 0) {
-            break;
-        }
+                    cout << "\nIngrese codigo del producto (0 para volver al menu): ";
+                    cin >> codigoProducto;
 
-		Producto *producto = buscarProducto(inventario, cantidadProductos, codigoProducto);
-        if (producto == NULL) {
-            cout << "Producto inexistente." << endl;
-            continue;
-        }
+                    if (codigoProducto == 0) {
+                        break;
+                    }
 
-		cout << "Descripcion: " << producto->descripcion << endl;
-        cout << "Precio unitario: $" << producto->precio << endl;
-        cout << "Stock actual: " << producto->stockActual << endl;
-        cout << "Cantidad a vender: ";
-        cin >> cantidadVendida;
+                    Producto *producto = buscarProducto(inventario, cantidadProductos, codigoProducto);
+                    if (producto == NULL) {
+                        cout << "Producto inexistente." << endl;
+                        continue;
+                    }
 
-        if (cantidadVendida <= 0) {
-            cout << "La cantidad debe ser mayor a cero." << endl;
-            continue;
-        }
+                    cout << "Descripcion: " << producto->descripcion << endl;
+                    cout << "Precio unitario: $" << producto->precio << endl;
+                    cout << "Stock actual: " << producto->stockActual << endl;
+                    cout << "Cantidad a vender: ";
+                    cin >> cantidadVendida;
 
-        if (cantidadVendida > producto->stockActual) {
-            cout << "No hay stock suficiente para esa venta." << endl;
-            continue;
-        }
-		
-float subtotal = producto->precio * cantidadVendida;
-        float comision = subtotal * 0.10f;
+                    if (cantidadVendida <= 0) {
+                        cout << "La cantidad debe ser mayor a cero." << endl;
+                        continue;
+                    }
 
-        ComandaHistorica registro;
-        strcpy(registro.fecha, fecha);
-        strcpy(registro.nombreMozo, mozoActual.nombre);
-        registro.codigoProducto = codigoProducto;
-        registro.cantidad = cantidadVendida;
-        registro.comision = comision;
+                    if (cantidadVendida > producto->stockActual) {
+                        cout << "No hay stock suficiente para esa venta." << endl;
+                        continue;
+                    }
 
-        FILE *fHistorico = fopen("comandas_historicas.dat", "ab");
-        if (fHistorico == NULL) {
-            cout << "No se pudo abrir comandas_historicas.dat." << endl;
-            return 0;
-        }
-		
-fwrite(&registro, sizeof(ComandaHistorica), 1, fHistorico);
-        fclose(fHistorico);
+                    float subtotal = producto->precio * cantidadVendida;
+                    float comision = subtotal * 0.10f;
 
-        producto->stockActual -= cantidadVendida;
-        totalVentaDelMozo += subtotal;
+                    ComandaHistorica registro;
+                    strcpy(registro.fecha, fecha);
+                    strcpy(registro.nombreMozo, mozoActual.nombre);
+                    registro.codigoProducto = codigoProducto;
+                    registro.cantidad = cantidadVendida;
+                    registro.comision = comision;
 
-        for (int i = 0; i < cantidadMozos; i++) {
-            if (mozos[i].idMozo == mozoActual.idMozo) {
-                mozos[i].totalComision += comision;
-                mozoActual.totalComision = mozos[i].totalComision;
+                    FILE *fHistorico = fopen("comandas_historicas.dat", "ab");
+                    if (fHistorico == NULL) {
+                        cout << "No se pudo abrir comandas_historicas.dat." << endl;
+                        return 0;
+                    }
+
+                    fwrite(&registro, sizeof(ComandaHistorica), 1, fHistorico);
+                    fclose(fHistorico);
+
+                    producto->stockActual -= cantidadVendida;
+                    totalVentaDelMozo += subtotal;
+
+                    for (int i = 0; i < cantidadMozos; i++) {
+                        if (mozos[i].idMozo == mozoActual.idMozo) {
+                            mozos[i].totalComision += comision;
+                            mozoActual.totalComision = mozos[i].totalComision;
+                            break;
+                        }
+                    }
+
+                    guardarInventario(inventario, cantidadProductos);
+                    guardarMozos(mozos, cantidadMozos);
+
+                    cout << "Venta registrada correctamente." << endl;
+                    cout << "Subtotal: $" << subtotal << endl;
+                    cout << "Comision del mozo: $" << comision << endl;
+                    cout << "Total acumulado del mozo en esta sesion: $" << totalVentaDelMozo << endl;
+                }
                 break;
             }
-        }
-		
-		guardarInventario(inventario, cantidadProductos);
-		guardarMozos(mozos, cantidadMozos);
 
-        cout << "Venta registrada correctamente." << endl;
-        cout << "Subtotal: $" << subtotal << endl;
-        cout << "Comision del mozo: $" << comision << endl;
-        cout << "Total acumulado del mozo en esta sesion: $" << totalVentaDelMozo << endl;
+            case 2: {
+                int nuevoId;
+                char nuevaPass[20];
+                Mozo nuevoMozo;
+
+                cout << "Ingrese el ID del nuevo mozo: ";
+                cin >> nuevoId;
+                cout << "Ingrese la password: ";
+                cin >> nuevaPass;
+
+                if (loginMozo(mozos, cantidadMozos, nuevoId, nuevaPass, nuevoMozo)) {
+                    mozoActual = nuevoMozo;
+                    totalVentaDelMozo = 0.0f;
+                    cout << "Ahora opera: " << mozoActual.nombre << endl;
+                } else {
+                    cout << "Credenciales invalidas. Se mantiene el mozo actual." << endl;
+                }
+                break;
+            }
+
+            case 0:
+                continuar = false;
+                break;
+
+            default:
+                cout << "Opcion invalida." << endl;
+                break;
+        }
     }
 
 	cout << "\nSe cerró la carga de ventas del dia " << fecha << "." << endl;
