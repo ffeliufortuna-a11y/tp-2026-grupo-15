@@ -52,6 +52,17 @@ void cargarMozos(Mozo mozos[], int &cantidadMozos) {
     fclose(f);
 }
 
+void guardarMozos(const Mozo mozos[], int cantidadMozos) {
+    FILE *f = fopen("mozos.dat", "wb");
+    if (f == NULL) {
+        cout << "No se pudo actualizar mozos.dat." << endl;
+        return;
+    }
+
+    fwrite(mozos, sizeof(Mozo), cantidadMozos, f);
+    fclose(f);
+}
+
 void cargarInventario(Producto inventario[], int &cantidadProductos) {
     FILE *f = fopen("inventario.dat", "rb");
     cantidadProductos = 0;
