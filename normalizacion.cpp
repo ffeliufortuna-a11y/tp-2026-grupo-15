@@ -53,8 +53,8 @@ void actualizarStock(FILE* inventario, int codProd, int cantVendida) {
         if (p.codigo == codProd) {
             p.stockActual -= cantVendida;  // Actualizamos la variable en memoria
            
-           fseek(finv, -sizeof(Producto), SEEK_CUR); // Retrocedemos el cursor el tamanio exacto de un Producto.            
-           fwrite(&p, sizeof(Producto), 1, finv); // Sobrescribimos el registro actualizado en esa misma posicion
+           fseek(inventario, -sizeof(Producto), SEEK_CUR); // Retrocedemos el cursor el tamanio exacto de un Producto.            
+           fwrite(&p, sizeof(Producto), 1, inventario); // Sobrescribimos el registro actualizado en esa misma posicion
            
             break; //Ya quedo actualizado
         }
@@ -95,19 +95,6 @@ int main (){
         }
     }
 
-    //  Creamos un vec para cargar todo el inventario desde el archivo inventario.dat
-    Producto inv[100];
-    //  Contador para saber cuántos productos hay cargados en la memoria principal.
-    int cantProductos = 0;
-    // Abrimos el archivo de inventario 
-    FILE* finv = fopen("inventario.dat", "rb");
-    if (finv != NULL) {
-        // Leemos todo el inventario hacia el vec
-        while (fread(&inv[cantProductos], sizeof(Producto), 1, finv) == 1 && cantProductos < 100) {
-            cantProductos++;                             // Incrementamos el contador de productos cargados.
-        }
-        fclose(finv);                                    // Cerramos el archivo de inventario tras pasarlo al vec
-    }
 
     Mozo lista[50];
     int cantidadMozos = 0; 
@@ -147,6 +134,13 @@ int main (){
     fclose(fmozos);
     
     cout << "Archivo mozos.dat generado exitosamente con " << cantidadMozos << " mozos." << endl;
+    
+    // ABRIMOS EL INVENTARIO EN MODO "r+b" (Lectura y Actualizaci�n) CHEQUEARRR
+    FILE* inventario = fopen("inventario.dat", "r+b");
+    if (inventario == NULL) {
+        cout << "No se pudo abrir inventario.dat para actualizacion" << endl;
+        return 0;
+    }
 
     // Declaramos una variable para almacenar la fecha actual que se está procesando en el corte de control
     char fechaActual[11] = "";
@@ -177,26 +171,22 @@ int main (){
         // Creamos una comanda con la estructura reducida 
         Comanda comandaDiaria;
         comandaDiaria.idMozo = idMozoEncontrado;         //  Asignamos el ID del mozo.
-        comandaDiaria.codigoProducto = v[i].codigoProducto; //  Copiamos el código del producto.
+        comandaDiaria.codigoProducto = v[i].codigoProducto; //  Copiamos el codigo del producto.
         comandaDiaria.cantidad = v[i].cantidad;         // : Copiamos la cantidad vendida
-        comandaDiaria.comision = v[i].comision;         //  Copiamos la comisión de la venta
+        comandaDiaria.comision = v[i].comision;         //  Copiamos la comision de la venta
 
         if (fDia != NULL) {
-            fwrite(&comandaDiaria, sizeof(Comanda), 1, fDia); //  Escribimos la comanda reducida en el archivo del día correspondiente
+            fwrite(&comandaDiaria, sizeof(Comanda), 1, fDia); //  Escribimos la comanda reducida en el archivo del dia correspondiente
         }
         
-        //  Llamamos a la función para descontar la cantidad vendida en el inventario almacenado en el vec
-        actualizarStockEnMemoria(inv, cantProductos, comandaDiaria.codigoProducto, comandaDiaria.cantidad);
-    }
+        //  Llamamos a la funcion para descontar la cantidad vendida en el inventario
+          actualizarStock(inventario, comandaDiaria.codigoProducto, comandaDiaria.cantidad);    }
 
-    //  Cerramos el último archivo diario que haya quedado abierto al finalizar el bucle
+    //  Cerramos el ultimo archivo diario que haya quedado abierto al finalizar el bucle
     if (fDia != NULL) fclose(fDia);
-
-    // Abrimos el archivo inventario.dat en modo escritura para sobrescribirlo con los datos ya actualizados desde el vec
-    finv = fopen("inventario.dat", "wb");
-    if (finv != NULL) {
-        fwrite(inv, sizeof(Producto), cantProductos, finv); //  ponemos el vec ene le archivo
-        fclose(finv);                                    
+    // Cerramos el archivo que mantuvimos abierto durante todo el proceso
+    if (inventario != NULL) {
+    	fclose(inventario);
     }
 
     return 0;
