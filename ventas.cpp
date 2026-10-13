@@ -199,8 +199,11 @@ cout << "Bienvenido/a: " << mozoActual.nombre << endl;
             break;
         }
 
-
-		
+		Producto *producto = buscarProducto(inventario, cantidadProductos, codigoProducto);
+        if (producto == NULL) {
+            cout << "Producto inexistente." << endl;
+            continue;
+        }
 
 		cout << "Descripcion: " << producto->descripcion << endl;
         cout << "Precio unitario: $" << producto->precio << endl;
