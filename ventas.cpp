@@ -250,6 +250,18 @@ fwrite(&registro, sizeof(ComandaHistorica), 1, fHistorico);
                 break;
             }
         }
+		
+		guardarInventario(inventario, cantidadProductos);
+		guardarMozos(mozos, cantidadMozos);
+
+        cout << "Venta registrada correctamente." << endl;
+        cout << "Subtotal: $" << subtotal << endl;
+        cout << "Comision del mozo: $" << comision << endl;
+        cout << "Total acumulado del mozo en esta sesion: $" << totalVentaDelMozo << endl;
+    }
+
+	cout << "\nSe cerró la carga de ventas del dia " << fecha << "." << endl;
+    cout << "Comision total del mozo en la sesion: $" << mozoActual.totalComision << endl;
 	
 	return 0;
 }
