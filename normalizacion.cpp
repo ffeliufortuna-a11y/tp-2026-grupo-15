@@ -135,23 +135,23 @@ int main (){
     
     cout << "Archivo mozos.dat generado exitosamente con " << cantidadMozos << " mozos." << endl;
     
-    // Abrimos el inventario en modo de lectura y escritura
+    // Abrimos el inventario en modo de lectura y escritura para actualizarlo
     FILE* inventario = fopen("inventario.dat", "rb+");
     if (inventario == NULL) {
         cout << "No se pudo abrir inventario.dat para actualizacion" << endl;
         return 0;
     }
 
-    // Declaramos una variable para almacenar la fecha actual que se estÃ¡ procesando en el corte de control
+    // Declaramos una variable para almacenar la fecha actual que se esta procesando en el corte de control
     char fechaActual[11] = "";
     
     FILE* fDia = NULL;
 
     // Recorremos nuevamente el vec ordenado para hacer el corte de control por fecha
     for (int i = 0; i < cantComandas; i++) {
-        // Comprobamos si cambiÃ³ la fecha respecto a la iteraciÃ³n anterior.
+        // Comprobamos si cambio la fecha respecto a la iteracion anterior.
         if (strcmp(v[i].fecha, fechaActual) != 0) {
-            if (fDia != NULL) fclose(fDia);               //  Si ya habÃ­a un archivo diario abierto, lo cerramos antes de cambiar de dÃ­a
+            if (fDia != NULL) fclose(fDia);               //  Si ya habia un archivo diario abierto, lo cerramos antes de cambiar de dia
             strcpy(fechaActual, v[i].fecha);              //  Actualizamos la fecha actual con la nueva fecha encontrada
             
             char nombreArch[30];                          // Variable temporal para construir el nombre del archivo diario
