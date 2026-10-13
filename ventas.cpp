@@ -4,92 +4,101 @@
 
 using namespace std;
 
+// Declaramos una variable global K fuera del main para usarla como corrimiento fijo en claves
 const int K = 5;
 
 struct Mozo {
     int idMozo;
     char nombre[50];
-    char password[20];
+    char password[20]; // agregamos este campo para almacenar la clave encriptada, exigido por el TP para el login seguro
     float totalComision;
-};
+}; 
 
+//  Creamos esta estructura para manejar el inventario y poder actualizar el stock
 struct Producto {
-    int codigo;
-    char descripcion[50];
-    float precio;
-    int stockActual;
+    int codigo;         //  Código único del producto
+    char descripcion[50]; // Descripción del producto.
+    float precio;       // Precio unitario del product.
+    int stockActual;    // Stock disponible que iremos descontando
 };
 
 struct ComandaHistorica {
-    char fecha[11];
-    char nombreMozo[50];
+    char fecha[11]; // "DD-MM-AAAA"
+    char nombreMozo[50]; // el nombre completo, repetido en cada venta
     int codigoProducto;
     int cantidad;
     float comision;
 };
 
+// Creamos esta función para cifrar la contraseña inicial sumándole el valor K a cada carácter.
 void encriptarContrasenia(const char origen[], char destino[]) {
-    int i = 0;
-    while (origen[i] != '\0') {
-        destino[i] = origen[i] + K;
-        i++;
+    int i = 0; // Inicializamos el índice para recorrer el texto carácter por carácter.
+    while (origen[i] != '\0') { //  Bucle que recorre la cadena hasta encontrar el carácter nulo de fin.
+        destino[i] = origen[i] + K; //  Al carácter actual le sumamos K para encriptarlo
+        i++; //  Avanzamos a la siguiente posición del texto.
     }
-    destino[i] = '\0';
+    destino[i] = '\0'; //  Colocamos el fin de cadena al final del texto ya encriptado.
 }
 
-void cargarMozos(Mozo mozos[], int &cantidadMozos) {
-    FILE *f = fopen("mozos.dat", "rb");
-    cantidadMozos = 0;
+//cargamos los mozos existentes de mozos.dat
+void cargarMozos(Mozo mozos[], int &cantidadMozos) { 
+    FILE *f = fopen("mozos.dat", "rb"); //abre el archivo
+    cantidadMozos = 0; //contador de mozos que se va a actualizar a medida que se carguen los mozos
 
-    if (f == NULL) {
+    if (f == NULL) { //si no hay mozos no se puede continuar asi que termina el programa
         cout << "No existe mozos.dat. Es necesario generar mozos.dat antes de cargar ventas." << endl;
         return;
     }
-  Mozo aux;
-    while (fread(&aux, sizeof(Mozo), 1, f) == 1 && cantidadMozos < 50) {
+	
+  Mozo aux; //aux para no perder los datos fuera del while
+    while (fread(&aux, sizeof(Mozo), 1, f) == 1 && cantidadMozos < 50) { //lectura del .dat y cuenta la cantidad de mozos
         mozos[cantidadMozos++] = aux;
     }
-    fclose(f);
+    fclose(f); //cierra mozos.dat
 }
 
+// actualiza las comisiones de el/Los mozo/s
 void guardarMozos(const Mozo mozos[], int cantidadMozos) {
-    FILE *f = fopen("mozos.dat", "wb");
-    if (f == NULL) {
+    FILE *f = fopen("mozos.dat", "wb"); //abre el archivo
+    if (f == NULL) { //se asegura que exista el archivo, sino termina el programa
         cout << "No se pudo actualizar mozos.dat." << endl;
         return;
     }
 
-    fwrite(mozos, sizeof(Mozo), cantidadMozos, f);
-    fclose(f);
+    fwrite(mozos, sizeof(Mozo), cantidadMozos, f); //actualiza mozos
+    fclose(f); //cierra mozos.dat
 }
 
+//cargo todo el inventario para futuramente validar que exista 
 void cargarInventario(Producto inventario[], int &cantidadProductos) {
-    FILE *f = fopen("inventario.dat", "rb");
-    cantidadProductos = 0;
+    FILE *f = fopen("inventario.dat", "rb"); //abre el archivo inventario.dat
+    cantidadProductos = 0; //contador de productos
 
-    if (f == NULL) {
+    if (f == NULL) { //se asegura de que exista invetario.dat sino termina el programa
         cout << "No existe inventario.dat. Debe generarse antes de registrar ventas." << endl;
         return;
     }
 
-    Producto aux;
+    Producto aux; // auxiliar para extraer los productos del while (para inventario.dat)
     while (fread(&aux, sizeof(Producto), 1, f) == 1 && cantidadProductos < 100) {
         inventario[cantidadProductos++] = aux;
     }
     fclose(f);
 }
 
+//actualizo el stock 
 void guardarInventario(const Producto inventario[], int cantidadProductos) {
-    FILE *f = fopen("inventario.dat", "wb");
-    if (f == NULL) {
+    FILE *f = fopen("inventario.dat", "wb"); //abro el archivo inventario.dat
+    if (f == NULL) { //me aseguro que exista el archivo, sino cierra programa
         cout << "No se pudo guardar el inventario." << endl;
         return;
     }
 
-    fwrite(inventario, sizeof(Producto), cantidadProductos, f);
+    fwrite(inventario, sizeof(Producto), cantidadProductos, f); //actualizo stock
     fclose(f);
 }
 
+//validar que sea correcta la contraseña
 bool loginMozo(Mozo mozos[], int cantidadMozos, int idIngresado, const char passIngresada[], Mozo &mozoLogueado) {
     char passEncriptada[20];
     encriptarContrasenia(passIngresada, passEncriptada);
@@ -113,29 +122,31 @@ Producto *buscarProducto(Producto inventario[], int cantidadProductos, int codig
     return NULL;
 }
 
+//me aseguro que la fecha ingresada sea valida
 bool esFechaValida(int dia, int mes, int anio) {
-   if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) {
+   if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) { //si no pasa los criterios minimos para ser una fecha valida se retorna
         return false;
     }
 
-    int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    bool anioBisiesto = anio % 4 == 0 && (anio % 100 != 0 || anio % 400 == 0);
+    int diasPorMes[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}; //dias que tiene "cada mes" sin contar años biciestos
+    bool anioBisiesto = anio % 4 == 0 && (anio % 100 != 0 || anio % 400 == 0); //verifico si hay año biciesto
 
-    if (anioBisiesto == true && mes == 2) {
-        diasPorMes[1] = 29;
+    if (anioBisiesto == true && mes == 2) { //si es año biciesto aumento el contador de febrero en 1
+        diasPorMes[1] = diasPorMes[1] + 1;
     }
 
-    if (dia > diasPorMes[mes - 1]) {
-        return false;
+    if (dia > diasPorMes[mes - 1]) { //me aseguro que ningun mes supere los dias respectivos a la lista
+        return false; //si no verifica retorna
     }
 	
-    return true;
+    return true; //verifica que la fecha es valida y retorna
 }
 
 int main (){
 	int dia, mes, anio;
-    char fecha[11];
-	 
+    char fecha[11]; //lista de los 12 meses
+
+	//ingreso la fecha en orden dia-mes-anio
 	 cout <<"Ingrese la fecha."<<endl;
 	 cout <<"Dia: ";
 	 cin >> dia;
@@ -143,47 +154,49 @@ int main (){
 	 cin >> mes;
 	 cout << "Anio: ";
 	 cin >> anio;
-	
+
+	//llamo a la funcion esFechaValida para validar que exista la fecha
      if (esFechaValida(dia, mes, anio) == false) {
         cout << "Fecha invalida. Verifique que el dia exista para ese mes y anio." << endl;
-        return 0;
+        return 0; //si no es valida la fecha termina el programa, sino continua
     }
 
-    sprintf(fecha, "%02d-%02d-%04d", dia, mes, anio);
+    sprintf(fecha, "%02d-%02d-%04d", dia, mes, anio); //formato de la fecha
 
-	Mozo mozos[50];
-    int cantidadMozos = 0;
-	cargarMozos(mozos, cantidadMozos);
+	Mozo mozos[50]; //establezco la cantidad de mozos limite
+    int cantidadMozos = 0; //contador de mozos existentes
+	cargarMozos(mozos, cantidadMozos); //llamo a la funcion cargarMozos para cargar los mozos existentes
 
-	if (cantidadMozos == 0) {
+	if (cantidadMozos == 0) { //verifico si hay mozos
         cout << "No hay mozos cargados. Primero debe generarse mozos.dat." << endl;
-        return 0;
+        return 0; //si no hay mozos termino el programa, sino continua
     }
 
-	Producto inventario[100];
-    int cantidadProductos = 0;
-    cargarInventario(inventario, cantidadProductos);
+	Producto inventario[100]; //establezco limite de productos 
+    int cantidadProductos = 0; //contador de productos existentes
+    cargarInventario(inventario, cantidadProductos); //llamo a la funcion cargarInventario para cargar el inventario existente
 
-	 if (cantidadProductos == 0) {
+	 if (cantidadProductos == 0) { //verifico si hay productos
         cout << "No hay productos cargados. Primero debe generarse inventario.dat." << endl;
-        return 0;
+        return 0; //si no hay productos termino el programa, sino continua
     }
 
 	int idMozo;
-    char pass[20];
+    char pass[20]; //limite del pass
 
+	//Ingreso los datos del mozo
     cout << "Ingrese el ID del mozo: ";
     cin >> idMozo;
     cout << "Ingrese la password: ";
     cin >> pass;
 
     Mozo mozoActual;
-    if (loginMozo(mozos, cantidadMozos, idMozo, pass, mozoActual) == false) {
+    if (loginMozo(mozos, cantidadMozos, idMozo, pass, mozoActual) == false) { //valido al mozo
         cout << "Credenciales invalidas." << endl;
-        return 0;
+        return 0; //si no se verifica los datos del mozo, finaliza el programa
     }
 
-cout << "Bienvenido/a: " << mozoActual.nombre << endl;
+cout << "Bienvenido/a: " << mozoActual.nombre << endl; //si se verifico los datos da la bienvenida
 
     int continuar = 1;
     float totalVentaDelMozo = 0.0f;
