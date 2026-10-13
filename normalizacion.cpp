@@ -17,15 +17,15 @@ struct Mozo {
 };
 
 struct Comanda { 
-    int idMozo;       //  Guarda el identificador numérico del mozo
-    int codigoProducto; //  Guarda el código del producto vendido
+    int idMozo;       //  Guarda el identificador numÃ©rico del mozo
+    int codigoProducto; //  Guarda el cÃ³digo del producto vendido
     int cantidad;     // Guarda la cantidad vendida del producto
-    float comision;   // Guarda la comisión correspondiente a la venta
+    float comision;   // Guarda la comisiÃ³n correspondiente a la venta
 };
 
 struct Producto {
-    int codigo;         //  Código único del producto
-    char descripcion[50]; // Descripción del producto.
+    int codigo;         //  CÃ³digo Ãºnico del producto
+    char descripcion[50]; // DescripciÃ³n del producto.
     float precio;       // Precio unitario del product.
     int stockActual;    // Stock disponible que iremos descontando
 };
@@ -68,20 +68,20 @@ int main (){
         return 0;
     }
 
-    // Declaramos un vec estático para cargar todo el archivo histórico 
+    // Declaramos un vec estÃ¡tico para cargar todo el archivo histÃ³rico 
     ComandaHistorica v[500];
-    // Variable para llevar la cuenta exacta de cuántas comandas leímos del archivo.
+    // Variable para llevar la cuenta exacta de cuÃ¡ntas comandas leÃ­mos del archivo.
     int cantComandas = 0;
     ComandaHistorica c;
 
-    // Leemos el archivo histórico completo y lo guardamos en el arreglo v para ordenarlo después
+    // Leemos el archivo histÃ³rico completo y lo guardamos en el arreglo v para ordenarlo despuÃ©s
     while (fread(&c, sizeof(ComandaHistorica), 1, f) == 1 && cantComandas < 500) {
-        v[cantComandas] = c;                             //  Almacenamos cada comanda leída en la posición del vec.
+        v[cantComandas] = c;                             //  Almacenamos cada comanda leÃ­da en la posiciÃ³n del vec.
         cantComandas++;                                  // Incrementamos el contador de comandas almacenadas
     }
     fclose(f);
 
-    // Validamos si el arreglo quedó vacío para evitar errores de ejecución en el ordenamiento.
+    // Validamos si el arreglo quedÃ³ vacÃ­o para evitar errores de ejecuciÃ³n en el ordenamiento.
     if (cantComandas == 0) return 0;
 
     //Aplicamos ordenamiento burbuja para ordenar el arreglo primero por fecha y luego por nombre de mozo
@@ -90,7 +90,7 @@ int main (){
             int comp = strcmp(v[j].fecha, v[j+1].fecha); //  Comparamos las fechas de dos comandas contiguas.
             if (comp > 0 || (comp == 0 && strcmp(v[j].nombreMozo, v[j+1].nombreMozo) > 0)) { 
                 ComandaHistorica aux = v[j];             // Pasamos el elemento siguiente al lugar actual.
-                v[j+1] = aux;                            // Asignamos el auxiliar a la siguiente posición.
+                v[j+1] = aux;                            // Asignamos el auxiliar a la siguiente posiciÃ³n.
             }
         }
     }
@@ -115,10 +115,10 @@ int main (){
             strcpy(lista[cantidadMozos].nombre, v[i].nombreMozo); 
             lista[cantidadMozos].totalComision = v[i].comision; 
             
-            // Creamos un texto temporal para guardar el ID numérico del mozo
+            // Creamos un texto temporal para guardar el ID numÃ©rico del mozo
             char passTemp[20];
             sprintf(passTemp, "%d", lista[cantidadMozos].idMozo); // Convertimos el ID entero a formato de texto para usarlo como clave inicial
-            encriptarPassword(passTemp, lista[cantidadMozos].password); // Encriptamos esa contraseña inicial y la guardamos en el mozo.
+            encriptarPassword(passTemp, lista[cantidadMozos].password); // Encriptamos esa contraseÃ±a inicial y la guardamos en el mozo.
 
             cantidadMozos++; 
         }
@@ -135,23 +135,23 @@ int main (){
     
     cout << "Archivo mozos.dat generado exitosamente con " << cantidadMozos << " mozos." << endl;
     
-    // ABRIMOS EL INVENTARIO EN MODO "r+b" (Lectura y Actualizaci�n) CHEQUEARRR
-    FILE* inventario = fopen("inventario.dat", "r+b");
+    // Abrimos el inventario en modo de lectura y escritura
+    FILE* inventario = fopen("inventario.dat", "rb+");
     if (inventario == NULL) {
         cout << "No se pudo abrir inventario.dat para actualizacion" << endl;
         return 0;
     }
 
-    // Declaramos una variable para almacenar la fecha actual que se está procesando en el corte de control
+    // Declaramos una variable para almacenar la fecha actual que se estÃ¡ procesando en el corte de control
     char fechaActual[11] = "";
     
     FILE* fDia = NULL;
 
     // Recorremos nuevamente el vec ordenado para hacer el corte de control por fecha
     for (int i = 0; i < cantComandas; i++) {
-        // Comprobamos si cambió la fecha respecto a la iteración anterior.
+        // Comprobamos si cambiÃ³ la fecha respecto a la iteraciÃ³n anterior.
         if (strcmp(v[i].fecha, fechaActual) != 0) {
-            if (fDia != NULL) fclose(fDia);               //  Si ya había un archivo diario abierto, lo cerramos antes de cambiar de día
+            if (fDia != NULL) fclose(fDia);               //  Si ya habÃ­a un archivo diario abierto, lo cerramos antes de cambiar de dÃ­a
             strcpy(fechaActual, v[i].fecha);              //  Actualizamos la fecha actual con la nueva fecha encontrada
             
             char nombreArch[30];                          // Variable temporal para construir el nombre del archivo diario
@@ -159,11 +159,11 @@ int main (){
             fDia = fopen(nombreArch, "wb");               //  Abrimos el nuevo archivo diario 
         }
 
-        //  Buscamos el ID numérico que le corresponde al nombre del mozo actual
+        //  Buscamos el ID numÃ©rico que le corresponde al nombre del mozo actual
         int idMozoEncontrado = 0;
         for (int j = 0; j < cantidadMozos; j++) {
             if (strcmp(lista[j].nombre, v[i].nombreMozo) == 0) {
-                idMozoEncontrado = lista[j].idMozo;       // Guardamos el ID numérico hallado
+                idMozoEncontrado = lista[j].idMozo;       // Guardamos el ID numÃ©rico hallado
                 break;
             }
         }
