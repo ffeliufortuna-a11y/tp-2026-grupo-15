@@ -79,6 +79,17 @@ void cargarInventario(Producto inventario[], int &cantidadProductos) {
     fclose(f);
 }
 
+void guardarInventario(const Producto inventario[], int cantidadProductos) {
+    FILE *f = fopen("inventario.dat", "wb");
+    if (f == NULL) {
+        cout << "No se pudo guardar el inventario." << endl;
+        return;
+    }
+
+    fwrite(inventario, sizeof(Producto), cantidadProductos, f);
+    fclose(f);
+}
+
 bool loginMozo(Mozo mozos[], int cantidadMozos, int idIngresado, const char passIngresada[], Mozo &mozoLogueado) {
     char passEncriptada[20];
     encriptarContrasenia(passIngresada, passEncriptada);
