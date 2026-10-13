@@ -206,7 +206,22 @@ cout << "Bienvenido/a: " << mozoActual.nombre << endl;
             cout << "No hay stock suficiente para esa venta." << endl;
             continue;
         }
+		
+float subtotal = producto->precio * cantidadVendida;
+        float comision = subtotal * 0.10f;
 
+        ComandaHistorica registro;
+        strcpy(registro.fecha, fecha);
+        strcpy(registro.nombreMozo, mozoActual.nombre);
+        registro.codigoProducto = codigoProducto;
+        registro.cantidad = cantidadVendida;
+        registro.comision = comision;
+
+        FILE *fHistorico = fopen("comandas_historicas.dat", "ab");
+        if (fHistorico == NULL) {
+            cout << "No se pudo abrir comandas_historicas.dat." << endl;
+            return 0;
+        }
 
 	
 	return 0;
