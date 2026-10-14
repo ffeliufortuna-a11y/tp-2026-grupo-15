@@ -45,18 +45,17 @@ void encriptarPassword(char origen[], char destino[]) {
 // Creamos esta funcion para actualizar el stock directamente en el archivo
 void actualizarStock(FILE* inventario, int codProd, int cantVendida) {
     Producto p;
-    
-    fseek(inventario, 0, SEEK_SET); // SEEK_SET mueve el cursor al principio del archivo para buscar el producto desde el primer registro.
+    int encontrado = 0; 
+    fseek(inventario, 0, SEEK_SET); //Ponemos el cursor al inicio del primer registro del archivo
       
-    // Leemos registro por registro
-    while (fread(&p, sizeof(Producto), 1, inventario) == 1) {
+    while (encontrado == 0 && fread(&p, sizeof(Producto), 1, inventario) == 1) {//Entra si leyo un registro y si aun no encontro el producto
+        
         if (p.codigo == codProd) {
-            p.stockActual -= cantVendida;  // Actualizamos la variable en memoria
-           
-           fseek(inventario, -sizeof(Producto), SEEK_CUR); // Retrocedemos el cursor el tamanio exacto de un Producto.            
-           fwrite(&p, sizeof(Producto), 1, inventario); // Sobrescribimos el registro actualizado en esa misma posicion
-           
-            break; //Ya quedo actualizado
+            p.stockActual -= cantVendida;  //Si encontramos el producto le restamos al stock la cantidad vendida
+            fseek(inventario, -sizeof(Producto), SEEK_CUR); //Retrocedemos el tamaño de un registro      
+            fwrite(&p, sizeof(Producto), 1, inventario); //Escribimos lo que acabamos de modificar
+            
+            encontrado = 1; //Termina el while
         }
     }
 }
