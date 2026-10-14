@@ -1,6 +1,7 @@
 #include <iostream>
-#include <cstdio> 
+#include <cstdio>
 #include <cstring>
+#include <cerrno>
 
 using namespace std;
 
@@ -8,11 +9,11 @@ using namespace std;
 const int K = 5;
 
 struct Mozo {
-    int idMozo;
-    char nombre[50];
-    char password[20]; // agregamos este campo para almacenar la clave encriptada, exigido por el TP para el login seguro
-    float totalComision;
-}; 
+    int idMozo;             // Identificador unico del mozo.
+    char nombre[50];        // Nombre completo del mozo.
+    char password[20];      // Contrasenia almacenada con el corrimiento definido por K.
+    float totalComision;    // Comision acumulada desde que comenzo a trabajar.
+};
 
 //  Creamos esta estructura para manejar el inventario y poder actualizar el stock
 struct Producto {
@@ -22,15 +23,15 @@ struct Producto {
     int stockActual;    // Stock disponible que iremos descontando
 };
 
-struct ComandaHistorica {
-    char fecha[11]; // "DD-MM-AAAA"
-    char nombreMozo[50]; // el nombre completo, repetido en cada venta
-    int codigoProducto;
-    int cantidad;
-    float comision;
+// Registro que se guarda en la planilla diaria, usando el ID del mozo en lugar de su nombre.
+struct Comanda {
+    int idMozo;             // Mozo que realizo la venta.
+    int codigoProducto;     // Codigo del producto vendido.
+    int cantidad;           // Unidades vendidas.
+    float comision;         // Comision generada por esta venta.
 };
 
-// Creamos esta función para cifrar la contraseña inicial sumándole el valor K a cada carácter.
+// Aplica un corrimiento fijo a cada caracter de la contrasenia.
 void encriptarContrasenia(const char origen[], char destino[]) {
     int i = 0; // Inicializamos el índice para recorrer el texto carácter por carácter.
     while (origen[i] != '\0') { //  Bucle que recorre la cadena hasta encontrar el carácter nulo de fin.
@@ -40,7 +41,7 @@ void encriptarContrasenia(const char origen[], char destino[]) {
     destino[i] = '\0'; //  Colocamos el fin de cadena al final del texto ya encriptado.
 }
 
-//cargamos los mozos existentes de mozos.dat
+// Carga en memoria los mozos existentes en mozos.dat.
 void cargarMozos(Mozo mozos[], int &cantidadMozos) { 
     FILE *f = fopen("mozos.dat", "rb"); //abre el archivo
     cantidadMozos = 0; //contador de mozos que se va a actualizar a medida que se carguen los mozos
@@ -57,24 +58,30 @@ void cargarMozos(Mozo mozos[], int &cantidadMozos) {
     fclose(f); //cierra mozos.dat
 }
 
-// actualiza las comisiones de el/Los mozo/s
-void guardarMozos(const Mozo mozos[], int cantidadMozos) {
+// Sobrescribe mozos.dat con los datos actualizados, incluida la comision acumulada.
+bool guardarMozos(const Mozo mozos[], int cantidadMozos) {
     FILE *f = fopen("mozos.dat", "wb"); //abre el archivo
     if (f == NULL) { //se asegura que exista el archivo, sino termina el programa
         cout << "No se pudo actualizar mozos.dat." << endl;
-        return;
+        return false;
     }
 
-    fwrite(mozos, sizeof(Mozo), cantidadMozos, f); //actualiza mozos
-    fclose(f); //cierra mozos.dat
+    bool guardado = fwrite(mozos, sizeof(Mozo), cantidadMozos, f) == (size_t)cantidadMozos; //actualiza mozos
+    if (fclose(f) != 0) { //cierra mozos.dat
+        guardado = false;
+    }
+    if (!guardado) {
+        cout << "Error al escribir mozos.dat." << endl;
+    }
+    return guardado;
 }
 
-//cargo todo el inventario para futuramente validar que exista 
+// Carga en memoria los productos y el stock actual de inventario.dat.
 void cargarInventario(Producto inventario[], int &cantidadProductos) {
     FILE *f = fopen("inventario.dat", "rb"); //abre el archivo inventario.dat
     cantidadProductos = 0; //contador de productos
 
-    if (f == NULL) { //se asegura de que exista invetario.dat sino termina el programa
+    if (f == NULL) { //se asegura de que exista invetario.dat sino finaliza el programa
         cout << "No existe inventario.dat. Debe generarse antes de registrar ventas." << endl;
         return;
     }
@@ -86,19 +93,25 @@ void cargarInventario(Producto inventario[], int &cantidadProductos) {
     fclose(f);
 }
 
-//actualizo el stock 
-void guardarInventario(const Producto inventario[], int cantidadProductos) {
+// Sobrescribe inventario.dat con el stock actualizado.
+bool guardarInventario(const Producto inventario[], int cantidadProductos) {
     FILE *f = fopen("inventario.dat", "wb"); //abro el archivo inventario.dat
-    if (f == NULL) { //me aseguro que exista el archivo, sino cierra programa
+    if (f == NULL) { //me aseguro que exista el archivo, sino finaliza programa
         cout << "No se pudo guardar el inventario." << endl;
-        return;
+        return false;
     }
 
-    fwrite(inventario, sizeof(Producto), cantidadProductos, f); //actualizo stock
-    fclose(f);
+    bool guardado = fwrite(inventario, sizeof(Producto), cantidadProductos, f) == (size_t)cantidadProductos; //actualizo stock
+    if (fclose(f) != 0) {
+        guardado = false;
+    }
+    if (!guardado) {
+        cout << "Error al escribir inventario.dat." << endl;
+    }
+    return guardado;
 }
 
-//validar que sea correcta la contraseña
+// Encripta la clave ingresada y comprueba que coincida con la del mozo indicado.
 bool loginMozo(Mozo mozos[], int cantidadMozos, int idIngresado, const char passIngresada[], Mozo &mozoLogueado) {
     char passEncriptada[20];
     encriptarContrasenia(passIngresada, passEncriptada);
@@ -122,7 +135,17 @@ Producto *buscarProducto(Producto inventario[], int cantidadProductos, int codig
     return NULL;
 }
 
-//me aseguro que la fecha ingresada sea valida
+// Busca un mozo por ID y devuelve su direccion, o NULL si no existe.
+Mozo *buscarMozo(Mozo mozos[], int cantidadMozos, int idMozo) {
+    for (int i = 0; i < cantidadMozos; i++) {
+        if (mozos[i].idMozo == idMozo) {
+            return &mozos[i];
+        }
+    }
+    return NULL;
+}
+
+// Comprueba que la fecha exista en el calendario, incluidos los anios bisiestos.
 bool esFechaValida(int dia, int mes, int anio) {
    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1) { //si no pasa los criterios minimos para ser una fecha valida se retorna
         return false;
@@ -142,11 +165,80 @@ bool esFechaValida(int dia, int mes, int anio) {
     return true; //verifica que la fecha es valida y retorna
 }
 
-int main (){
-	int dia, mes, anio;
-    char fecha[11]; //lista de los 12 meses
+// Ordena la planilla diaria en forma ascendente por ID de mozo.
+void ordenarComandasPorMozo(Comanda planilla[], int cantidad) {
+    for (int i = 0; i < cantidad - 1; i++) {
+        for (int j = 0; j < cantidad - i - 1; j++) {
+            if (planilla[j].idMozo > planilla[j + 1].idMozo) {
+                Comanda aux = planilla[j];
+                planilla[j] = planilla[j + 1];
+                planilla[j + 1] = aux;
+            }
+        }
+    }
+}
 
-	//ingreso la fecha en orden dia-mes-anio
+// Lee la planilla del dia. Si aun no existe, la considera vacia para la primera venta.
+bool cargarPlanillaDiaria(const char fecha[], Comanda planilla[], int &cantidad) {
+    char nombreArchivo[40];
+    snprintf(nombreArchivo, sizeof(nombreArchivo), "comandas_%s.dat", fecha);
+
+    FILE *f = fopen(nombreArchivo, "rb");
+    cantidad = 0;
+    if (f == NULL) {
+        if (errno == ENOENT) {
+            return true;
+        }
+        cout << "No se pudo abrir la planilla diaria para leerla." << endl;
+        return false;
+    }
+
+    Comanda aux;
+    while (cantidad < 500 && fread(&aux, sizeof(Comanda), 1, f) == 1) {
+        planilla[cantidad++] = aux;
+    }
+    if (ferror(f)) {
+        cout << "Error al leer la planilla diaria." << endl;
+        fclose(f);
+        return false;
+    }
+    if (cantidad == 500 && fread(&aux, sizeof(Comanda), 1, f) == 1) {
+        cout << "La planilla diaria supera el limite de registros." << endl;
+        fclose(f);
+        return false;
+    }
+    fclose(f);
+    ordenarComandasPorMozo(planilla, cantidad);
+    return true;
+}
+
+// Guarda la planilla diaria completa; informa si no pudo escribir todos los registros.
+bool guardarPlanillaDiaria(const char fecha[], const Comanda planilla[], int cantidad) {
+    // Se abre en modo escritura porque la planilla ya contiene las ventas anteriores y la nueva.
+    char nombreArchivo[40];
+    snprintf(nombreArchivo, sizeof(nombreArchivo), "comandas_%s.dat", fecha);
+
+    FILE *f = fopen(nombreArchivo, "wb");
+    if (f == NULL) {
+        cout << "No se pudo guardar la planilla del dia." << endl;
+        return false;
+    }
+
+    bool guardado = fwrite(planilla, sizeof(Comanda), cantidad, f) == (size_t)cantidad;
+    if (fclose(f) != 0) {
+        guardado = false;
+    }
+    if (!guardado) {
+        cout << "Error al escribir la planilla del dia." << endl;
+    }
+    return guardado;
+}
+
+int main() {
+    int dia, mes, anio;
+    char fecha[11]; 
+
+	// Se solicita una sola fecha para todas las ventas de esta tanda.
 	 cout <<"Ingrese la fecha."<<endl;
 	 cout <<"Dia: ";
 	 cin >> dia;
@@ -155,154 +247,139 @@ int main (){
 	 cout << "Anio: ";
 	 cin >> anio;
 
-	//llamo a la funcion esFechaValida para validar que exista la fecha
+	// Se valida la fecha antes de usarla para nombrar la planilla.
      if (esFechaValida(dia, mes, anio) == false) {
         cout << "Fecha invalida. Verifique que el dia exista para ese mes y anio." << endl;
         return 0; //si no es valida la fecha termina el programa, sino continua
     }
 
-    sprintf(fecha, "%02d-%02d-%04d", dia, mes, anio); //formato de la fecha
+    sprintf(fecha, "%02d-%02d-%04d", dia, mes, anio); // Arma la fecha con dia y mes de dos digitos.
 
-	Mozo mozos[50]; //establezco la cantidad de mozos limite
-    int cantidadMozos = 0; //contador de mozos existentes
-	cargarMozos(mozos, cantidadMozos); //llamo a la funcion cargarMozos para cargar los mozos existentes
+	Mozo mozos[50]; // Arreglo con el maximo de mozos que se cargan en memoria.
+    int cantidadMozos = 0; // Cantidad de registros leidos desde mozos.dat.
+	cargarMozos(mozos, cantidadMozos); // Carga los mozos para validar las ventas.
 
 	if (cantidadMozos == 0) { //verifico si hay mozos
         cout << "No hay mozos cargados. Primero debe generarse mozos.dat." << endl;
         return 0; //si no hay mozos termino el programa, sino continua
     }
 
-	Producto inventario[100]; //establezco limite de productos 
-    int cantidadProductos = 0; //contador de productos existentes
-    cargarInventario(inventario, cantidadProductos); //llamo a la funcion cargarInventario para cargar el inventario existente
+    Producto inventario[100]; // Arreglo con el maximo de productos que se cargan en memoria.
+    int cantidadProductos = 0; // Cantidad de registros leidos desde inventario.dat.
+    cargarInventario(inventario, cantidadProductos); // Carga productos y stock para validar cada venta.
 
 	 if (cantidadProductos == 0) { //verifico si hay productos
         cout << "No hay productos cargados. Primero debe generarse inventario.dat." << endl;
         return 0; //si no hay productos termino el programa, sino continua
     }
 
-	int idMozo;
-    char pass[20]; //limite del pass
-
-	//Ingreso los datos del mozo
-    cout << "Ingrese el ID del mozo: ";
-    cin >> idMozo;
-    cout << "Ingrese la password: ";
-    cin >> pass;
-
-    Mozo mozoActual;
-    if (loginMozo(mozos, cantidadMozos, idMozo, pass, mozoActual) == false) { //valido al mozo
-        cout << "Credenciales invalidas." << endl;
-        return 0; //si no se verifica los datos del mozo, finaliza el programa
-    }
-
-cout << "Bienvenido/a: " << mozoActual.nombre << endl; //si se verifico los datos da la bienvenida
-
-    int continuar = true;
-    float totalVentaDelMozo = 0.0f; //contador de ventas
+    bool continuar = true;
 
     while (continuar) {
         int opcion;
         cout << "\n--- Menu de ventas ---" << endl;
         cout << "1. Registrar venta" << endl;
-        cout << "2. Cambiar de mozo" << endl;
         cout << "0. Finalizar" << endl;
         cout << "Opcion: ";
         cin >> opcion;
 
         switch (opcion) {
             case 1: {
-                while (true) {
-                    int codigoProducto;
-                    int cantidadVendida;
+                // Cada venta requiere identificar y autenticar al mozo que la registra.
+                int idMozo;
+                char pass[20];
+                int codigoProducto;
+                int cantidadVendida;
 
-                    cout << "\nIngrese codigo del producto (0 para volver al menu): ";
-                    cin >> codigoProducto;
+                cout << "Ingrese el ID del mozo: ";
+                cin >> idMozo;
+                if (buscarMozo(mozos, cantidadMozos, idMozo) == NULL) {
+                    cout << "No existe un mozo con ese ID." << endl;
+                    break;
+                }
 
-                    if (codigoProducto == 0) {
+                cout << "Ingrese la password: ";
+                cin >> pass;
+                Mozo mozoActual;
+                if (!loginMozo(mozos, cantidadMozos, idMozo, pass, mozoActual)) {
+                    cout << "Credenciales invalidas." << endl;
+                    break;
+                }
+
+                cout << "Bienvenido/a: " << mozoActual.nombre << endl;
+                cout << "Ingrese codigo del producto: ";
+                cin >> codigoProducto;
+
+                Producto *producto = buscarProducto(inventario, cantidadProductos, codigoProducto);
+                if (producto == NULL) {
+                    cout << "Producto inexistente." << endl;
+                    break;
+                }
+
+                cout << "Descripcion: " << producto->descripcion << endl;
+                cout << "Precio unitario: $" << producto->precio << endl;
+                cout << "Stock actual: " << producto->stockActual << endl;
+                cout << "Cantidad a vender: ";
+                cin >> cantidadVendida;
+
+                if (cantidadVendida <= 0) {
+                    cout << "La cantidad debe ser mayor a cero." << endl;
+                    break;
+                }
+                if (cantidadVendida > producto->stockActual) {
+                    cout << "No hay stock suficiente para esa venta." << endl;
+                    break;
+                }
+
+                // La comision se calcula como el 10% del subtotal de la venta.
+                float subtotal = producto->precio * cantidadVendida;
+                float comision = subtotal * 0.10f;
+
+                // Se prepara el registro diario con el ID numerico del mozo.
+                Comanda comandaDiaria;
+                comandaDiaria.idMozo = mozoActual.idMozo;
+                comandaDiaria.codigoProducto = codigoProducto;
+                comandaDiaria.cantidad = cantidadVendida;
+                comandaDiaria.comision = comision;
+
+                Comanda planillaDiaria[500];
+                int cantidadEnPlanilla = 0;
+                // Se conserva la planilla existente, se agrega la venta y se guarda ordenada.
+                if (!cargarPlanillaDiaria(fecha, planillaDiaria, cantidadEnPlanilla)) {
+                    break;
+                }
+                if (cantidadEnPlanilla >= 500) {
+                    cout << "La planilla diaria alcanzo el limite de registros." << endl;
+                    break;
+                }
+                planillaDiaria[cantidadEnPlanilla++] = comandaDiaria;
+                ordenarComandasPorMozo(planillaDiaria, cantidadEnPlanilla);
+                if (!guardarPlanillaDiaria(fecha, planillaDiaria, cantidadEnPlanilla)) {
+                    break;
+                }
+
+                // Solo despues de guardar la comanda se actualizan stock y comision acumulada.
+                producto->stockActual -= cantidadVendida;
+                for (int i = 0; i < cantidadMozos; i++) {
+                    if (mozos[i].idMozo == mozoActual.idMozo) {
+                        mozos[i].totalComision += comision;
+                        mozoActual.totalComision = mozos[i].totalComision;
                         break;
                     }
-
-                    Producto *producto = buscarProducto(inventario, cantidadProductos, codigoProducto);
-                    if (producto == NULL) {
-                        cout << "Producto inexistente." << endl;
-                        continue;
-                    }
-
-                    cout << "Descripcion: " << producto->descripcion << endl;
-                    cout << "Precio unitario: $" << producto->precio << endl;
-                    cout << "Stock actual: " << producto->stockActual << endl;
-                    cout << "Cantidad a vender: ";
-                    cin >> cantidadVendida;
-
-                    if (cantidadVendida <= 0) {
-                        cout << "La cantidad debe ser mayor a cero." << endl;
-                        continue;
-                    }
-
-                    if (cantidadVendida > producto->stockActual) {
-                        cout << "No hay stock suficiente para esa venta." << endl;
-                        continue;
-                    }
-
-                    float subtotal = producto->precio * cantidadVendida;
-                    float comision = subtotal * 0.10f;
-
-                    ComandaHistorica registro;
-                    strcpy(registro.fecha, fecha);
-                    strcpy(registro.nombreMozo, mozoActual.nombre);
-                    registro.codigoProducto = codigoProducto;
-                    registro.cantidad = cantidadVendida;
-                    registro.comision = comision;
-
-                    FILE *fHistorico = fopen("comandas_historicas.dat", "ab");
-                    if (fHistorico == NULL) {
-                        cout << "No se pudo abrir comandas_historicas.dat." << endl;
-                        return 0;
-                    }
-
-                    fwrite(&registro, sizeof(ComandaHistorica), 1, fHistorico);
-                    fclose(fHistorico);
-
-                    producto->stockActual -= cantidadVendida;
-                    totalVentaDelMozo += subtotal;
-
-                    for (int i = 0; i < cantidadMozos; i++) {
-                        if (mozos[i].idMozo == mozoActual.idMozo) {
-                            mozos[i].totalComision += comision;
-                            mozoActual.totalComision = mozos[i].totalComision;
-                            break;
-                        }
-                    }
-
-                    guardarInventario(inventario, cantidadProductos);
-                    guardarMozos(mozos, cantidadMozos);
-
-                    cout << "Venta registrada correctamente." << endl;
-                    cout << "Subtotal: $" << subtotal << endl;
-                    cout << "Comision del mozo: $" << comision << endl;
-                    cout << "Total acumulado del mozo en esta sesion: $" << totalVentaDelMozo << endl;
                 }
-                break;
-            }
 
-            case 2: {
-                int nuevoId;
-                char nuevaPass[20];
-                Mozo nuevoMozo;
-
-                cout << "Ingrese el ID del nuevo mozo: ";
-                cin >> nuevoId;
-                cout << "Ingrese la password: ";
-                cin >> nuevaPass;
-
-                if (loginMozo(mozos, cantidadMozos, nuevoId, nuevaPass, nuevoMozo)) {
-                    mozoActual = nuevoMozo;
-                    totalVentaDelMozo = 0.0f;
-                    cout << "Ahora opera: " << mozoActual.nombre << endl;
-                } else {
-                    cout << "Credenciales invalidas. Se mantiene el mozo actual." << endl;
+                bool inventarioGuardado = guardarInventario(inventario, cantidadProductos);
+                bool mozosGuardados = guardarMozos(mozos, cantidadMozos);
+                if (!inventarioGuardado || !mozosGuardados) {
+                    cout << "La comanda diaria se guardo, pero no se pudieron guardar todos los archivos auxiliares. Se finaliza la carga para evitar inconsistencias." << endl;
+                    continuar = false;
+                    break;
                 }
+
+                cout << "Venta registrada correctamente." << endl;
+                cout << "Subtotal: $" << subtotal << endl;
+                cout << "Comision del mozo: $" << comision << endl;
+                cout << "Comision total acumulada del mozo: $" << mozoActual.totalComision << endl;
                 break;
             }
 
@@ -316,8 +393,7 @@ cout << "Bienvenido/a: " << mozoActual.nombre << endl; //si se verifico los dato
         }
     }
 
-	cout << "\nSe cerró la carga de ventas del dia " << fecha << "." << endl;
-    cout << "Comision total del mozo en la sesion: $" << mozoActual.totalComision << endl;
-	
-	return 0;
+    cout << "\nSe cerró la carga de ventas del dia " << fecha << "." << endl;
+
+    return 0;
 }
