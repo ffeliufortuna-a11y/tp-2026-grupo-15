@@ -8,26 +8,26 @@ struct ComandaHistorica {
     char nombreMozo[50]; // el nombre completo, repetido en cada venta
     int codigoProducto; int cantidad; float comision;
 };
-
+//Para el archivo de mozos.dat
 struct Mozo { 
     int idMozo; 
     char nombre[50];
     char password[20]; 
     float totalComision; 
 };
-
+//Para los archivos de comandas por dia
 struct Comanda { 
-    int idMozo;       //  Guarda el identificador numÃ©rico del mozo
-    int codigoProducto; //  Guarda el cÃ³digo del producto vendido
+    int idMozo;       //  Guarda el identificador numerico del mozo
+    int codigoProducto; //  Guarda el codigo del producto vendido
     int cantidad;     // Guarda la cantidad vendida del producto
-    float comision;   // Guarda la comisiÃ³n correspondiente a la venta
+    float comision;   // Guarda la comision correspondiente a la venta
 };
 
 struct Producto {
-    int codigo;         //  CÃ³digo Ãºnico del producto
-    char descripcion[50]; // DescripciÃ³n del producto.
-    float precio;       // Precio unitario del product.
-    int stockActual;    // Stock disponible que iremos descontando
+    int codigo;         //  Codigo del producto
+    char descripcion[50]; // Nombre del producto
+    float precio;       // Precio unitario del producto
+    int stockActual;    // Stock disponible 
 };
 // Declaramos una variable global k fuera del main para usarla como corrimiento fijo en claves
 int k = 5;
@@ -68,21 +68,23 @@ int main (){
         return 0;
     }
 
-    // Declaramos un vec estÃ¡tico para cargar todo el archivo histÃ³rico 
+    // Declaramos un vec estatico para cargar todo el archivo historico 
     ComandaHistorica v[500];
-    // Variable para llevar la cuenta exacta de cuÃ¡ntas comandas leÃ­mos del archivo.
+    // Variable para llevar la cuenta exacta de cuantas comandas leamos del archivo.
     int cantComandas = 0;
     ComandaHistorica c;
 
-    // Leemos el archivo histÃ³rico completo y lo guardamos en el arreglo v para ordenarlo despuÃ©s
+    // Leemos el archivo historico completo y lo guardamos en el vector v para ordenarlo despues
     while (fread(&c, sizeof(ComandaHistorica), 1, f) == 1 && cantComandas < 500) {
-        v[cantComandas] = c;                             //  Almacenamos cada comanda leÃ­da en la posiciÃ³n del vec.
+        v[cantComandas] = c;                             //  Almacenamos cada comanda leida en la posicion del vector
         cantComandas++;                                  // Incrementamos el contador de comandas almacenadas
     }
     fclose(f);
 
-    // Validamos si el arreglo quedÃ³ vacÃ­o para evitar errores de ejecuciÃ³n en el ordenamiento.
-    if (cantComandas == 0) return 0;
+    // Validamos si el vector quedo vacio para evitar errores de ejecucion en el ordenamiento
+    if (cantComandas == 0) {
+    	return 0;
+    }
 
     //Aplicamos ordenamiento burbuja para ordenar el arreglo primero por fecha y luego por nombre de mozo
     for (int i = 0; i < cantComandas - 1; i++) {
@@ -90,7 +92,7 @@ int main (){
             int comp = strcmp(v[j].fecha, v[j+1].fecha); //  Comparamos las fechas de dos comandas contiguas.
             if (comp > 0 || (comp == 0 && strcmp(v[j].nombreMozo, v[j+1].nombreMozo) > 0)) { 
                 ComandaHistorica aux = v[j];             // Pasamos el elemento siguiente al lugar actual.
-                v[j+1] = aux;                            // Asignamos el auxiliar a la siguiente posiciÃ³n.
+                v[j+1] = aux;                            // Asignamos el auxiliar a la siguiente posicion.
             }
         }
     }
