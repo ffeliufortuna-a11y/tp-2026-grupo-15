@@ -153,7 +153,10 @@ int main (){
     for (int i = 0; i < cantComandas; i++) {
         // Comprobamos si cambio la fecha respecto a la iteracion anterior.
         if (strcmp(v[i].fecha, fechaActual) != 0) {
-            if (fDia != NULL) fclose(fDia);               //  Si ya habia un archivo diario abierto, lo cerramos antes de cambiar de dia
+            if (fDia != NULL) 
+			{ 
+			   fclose(fDia);
+		     	}               //  Si ya habia un archivo diario abierto, lo cerramos antes de cambiar de dia
             strcpy(fechaActual, v[i].fecha);              //  Actualizamos la fecha actual con la nueva fecha encontrada
             
             char nombreArch[30];                          // Variable temporal para construir el nombre del archivo diario
