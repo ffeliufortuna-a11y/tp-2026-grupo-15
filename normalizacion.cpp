@@ -67,20 +67,20 @@ int main (){
         return 0;
     }
 
-    // Declaramos un vec estatico para cargar todo el archivo historico 
+    // Declaramos un vec para cargar todo el archivo de comandas dado 
     ComandaHistorica v[500];
     // Variable para llevar la cuenta exacta de cuantas comandas leamos del archivo.
     int cantComandas = 0;
     ComandaHistorica c;
 
-    // Leemos el archivo historico completo y lo guardamos en el vector v para ordenarlo despues
+    // Leemos el archivo completo y lo guardamos en el vector v para ordenarlo despues
     while (fread(&c, sizeof(ComandaHistorica), 1, f) == 1 && cantComandas < 500) {
         v[cantComandas] = c;                             //  Almacenamos cada comanda leida en la posicion del vector
         cantComandas++;                                  // Incrementamos el contador de comandas almacenadas
     }
     fclose(f);
 
-    // Validamos si el vector quedo vacio para evitar errores de ejecucion en el ordenamiento
+    // Vemos si el vector quedo vacio para evitar errores 
     if (cantComandas == 0) {
     	return 0;
     }
@@ -88,9 +88,10 @@ int main (){
     //Aplicamos ordenamiento burbuja para ordenar el arreglo primero por fecha y luego por nombre de mozo
     for (int i = 0; i < cantComandas - 1; i++) {
         for (int j = 0; j < cantComandas - i - 1; j++) {
-            int comp = strcmp(v[j].fecha, v[j+1].fecha); //  Comparamos las fechas de dos comandas contiguas.
+            int comp = strcmp(v[j].fecha, v[j+1].fecha); //  Comparamos las fechas de dos comandas consecutivas
             if (comp > 0 || (comp == 0 && strcmp(v[j].nombreMozo, v[j+1].nombreMozo) > 0)) { 
-                ComandaHistorica aux = v[j];             // Pasamos el elemento siguiente al lugar actual.
+                ComandaHistorica aux = v[j];               //Guardamos el primer elemeto en un aux
+				v[j] =  v[j+1];                          // Pasamos el elemento siguiente al lugar actual.
                 v[j+1] = aux;                            // Asignamos el auxiliar a la siguiente posicion.
             }
         }
@@ -160,11 +161,11 @@ int main (){
             fDia = fopen(nombreArch, "wb");               //  Abrimos el nuevo archivo diario 
         }
 
-        //  Buscamos el ID numÃ©rico que le corresponde al nombre del mozo actual
+        //  Buscamos el ID numerico que le corresponde al nombre del mozo actual
         int idMozoEncontrado = 0;
         for (int j = 0; j < cantidadMozos; j++) {
             if (strcmp(lista[j].nombre, v[i].nombreMozo) == 0) {
-                idMozoEncontrado = lista[j].idMozo;       // Guardamos el ID numÃ©rico hallado
+                idMozoEncontrado = lista[j].idMozo;       // Guardamos el ID numerico hallado
                 break;
             }
         }
